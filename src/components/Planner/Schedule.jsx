@@ -60,8 +60,8 @@ export default function Schedule({ date }) {
     function handleSlotClick(slot) {
         setEditingSlot(slot);
         setEditValue(entries[slot] || '');
-        setShowHints(true);
-        setFilteredHints(hints.slice(0, 8));
+        setShowHints(false);
+        setFilteredHints([]);
     }
 
     function handleSave(slot) {
@@ -87,13 +87,13 @@ export default function Schedule({ date }) {
 
     function handleInputChange(val) {
         setEditValue(val);
-        if (val.trim()) {
+        if (val.trim().length >= 2) {
             const filtered = hints.filter(h => h.toLowerCase().includes(val.toLowerCase()));
             setFilteredHints(filtered.slice(0, 6));
             setShowHints(filtered.length > 0);
         } else {
-            setFilteredHints(hints.slice(0, 8));
-            setShowHints(hints.length > 0);
+            setFilteredHints([]);
+            setShowHints(false);
         }
     }
 
@@ -178,7 +178,7 @@ export default function Schedule({ date }) {
                                     onKeyDown={e => handleKeyDown(e, slot)}
                                     placeholder="Add activity..."
                                     onClick={e => e.stopPropagation()}
-                                    onFocus={() => { setShowHints(true); setFilteredHints(hints.slice(0, 8)); }}
+                                    onFocus={() => { }}
                                 />
                                 {showHints && filteredHints.length > 0 && (
                                     <div className="schedule-hints">
