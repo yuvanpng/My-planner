@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Sun, Moon } from 'lucide-react';
+import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Sun, Moon, Timer } from 'lucide-react';
 import { getActiveGoals } from '../../lib/store';
 import { useState, useEffect } from 'react';
 
@@ -65,6 +65,10 @@ export default function Sidebar() {
                 <NavLink to="/calendar" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <CalendarDays />
                     Calendar
+                </NavLink>
+                <NavLink to="/study" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <Timer />
+                    Study Timer
                 </NavLink>
 
                 <div className="sidebar-section-label">Academic</div>

@@ -6,6 +6,7 @@ import Journal from './pages/Journal';
 import Academic from './pages/Academic';
 import Goals from './pages/Goals';
 import CalendarView from './pages/CalendarView';
+import StudyTimer from './pages/StudyTimer';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/academic" element={<Academic />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/study" element={<StudyTimer />} />
         </Route>
       </Routes>
     </BrowserRouter>

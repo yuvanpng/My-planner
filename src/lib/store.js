@@ -24,6 +24,8 @@ const STORAGE_KEYS = {
     EVENTS: 'planner_events',
     OFF_DAYS: 'planner_off_days',
     SCHEDULE_HISTORY: 'planner_schedule_history',
+    STUDY_SUBJECTS: 'planner_study_subjects',
+    STUDY_SESSIONS: 'planner_study_sessions',
 };
 
 function generateId() {
@@ -611,6 +613,57 @@ export function calculateStreak(habitId) {
     bestStreak = Math.max(bestStreak, tempStreak);
 
     return { currentStreak, bestStreak, totalDays: logDates.size };
+}
+
+// ==================== STUDY SUBJECTS ====================
+const SUBJECT_COLORS = ['#f97316', '#3b82f6', '#a855f7', '#10b981', '#ef4444', '#eab308', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e'];
+
+export function getStudySubjects() {
+    return getStore(STORAGE_KEYS.STUDY_SUBJECTS);
+}
+
+export function addStudySubject(name) {
+    const all = getStore(STORAGE_KEYS.STUDY_SUBJECTS);
+    const color = SUBJECT_COLORS[all.length % SUBJECT_COLORS.length];
+    const record = { id: generateId(), name, color, created_at: new Date().toISOString() };
+    all.push(record);
+    setStore(STORAGE_KEYS.STUDY_SUBJECTS, all);
+    pushInsert('study_subjects', record);
+    return record;
+}
+
+export function deleteStudySubject(id) {
+    const all = getStore(STORAGE_KEYS.STUDY_SUBJECTS);
+    setStore(STORAGE_KEYS.STUDY_SUBJECTS, all.filter(s => s.id !== id));
+    pushDelete('study_subjects', id);
+    // Also remove sessions for this subject
+    const sessions = getStore(STORAGE_KEYS.STUDY_SESSIONS);
+    setStore(STORAGE_KEYS.STUDY_SESSIONS, sessions.filter(s => s.subject_id !== id));
+    pushDeleteMatch('study_sessions', { subject_id: id });
+}
+
+// ==================== STUDY SESSIONS ====================
+export function getAllStudySessions() {
+    return getStore(STORAGE_KEYS.STUDY_SESSIONS);
+}
+
+export function getStudySessionsForDate(date) {
+    return getStore(STORAGE_KEYS.STUDY_SESSIONS).filter(s => s.date === date);
+}
+
+export function addStudySession({ subject_id, duration_mins, date, note }) {
+    const all = getStore(STORAGE_KEYS.STUDY_SESSIONS);
+    const record = { id: generateId(), subject_id, duration_mins, date, note: note || '', created_at: new Date().toISOString() };
+    all.push(record);
+    setStore(STORAGE_KEYS.STUDY_SESSIONS, all);
+    pushInsert('study_sessions', record);
+    return record;
+}
+
+export function deleteStudySession(id) {
+    const all = getStore(STORAGE_KEYS.STUDY_SESSIONS);
+    setStore(STORAGE_KEYS.STUDY_SESSIONS, all.filter(s => s.id !== id));
+    pushDelete('study_sessions', id);
 }
 
 // ==================== SEED DEFAULT HABITS & GOALS ====================

@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { format, subDays, eachDayOfInterval, startOfMonth, endOfMonth, subMonths, differenceInDays } from 'date-fns';
-import { BarChart3, Flame, TrendingUp, Activity, Star, Award, Zap, Calendar } from 'lucide-react';
+import { BarChart3, Flame, TrendingUp, Activity, Star, Award, Zap, Calendar, BookOpen } from 'lucide-react';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, PieChart, Pie, Cell, ComposedChart, Legend } from 'recharts';
-import { getAllHabits, getAllHabitLogs, getDailyGoals, getAllGoalLogs, getOffDays, calculateStreak, isBestDay, getAllJournalEntries } from '../lib/store';
+import { getAllHabits, getAllHabitLogs, getDailyGoals, getAllGoalLogs, getOffDays, calculateStreak, isBestDay, getAllJournalEntries, getAllStudySessions, getStudySubjects } from '../lib/store';
 
 const GOAL_COLORS = {
     physical: '#f97316',
@@ -23,6 +23,8 @@ export default function Stats() {
     const goalLogs = getAllGoalLogs();
     const offDays = new Set(getOffDays().map(d => d.date));
     const journals = getAllJournalEntries();
+    const studySessions = getAllStudySessions();
+    const studySubjects = getStudySubjects();
 
     // Habit streaks (off-day aware)
     const habitStats = useMemo(() => {
@@ -153,6 +155,41 @@ export default function Stats() {
         }
         return count;
     }, [goalLogs]);
+
+    // Study stats
+    const studyStats = useMemo(() => {
+        const totalMins = studySessions.reduce((sum, s) => sum + s.duration_mins, 0);
+        const totalHours = (totalMins / 60).toFixed(1);
+        const sessionCount = studySessions.length;
+
+        // Per-subject breakdown
+        const subjectMap = {};
+        studySessions.forEach(s => {
+            if (!subjectMap[s.subject_id]) subjectMap[s.subject_id] = 0;
+            subjectMap[s.subject_id] += s.duration_mins;
+        });
+        const perSubject = Object.entries(subjectMap).map(([id, mins]) => {
+            const sub = studySubjects.find(x => x.id === id);
+            return { name: sub?.name || 'Unknown', hours: +(mins / 60).toFixed(1), color: sub?.color || '#666', mins };
+        }).sort((a, b) => b.mins - a.mins);
+
+        // This month
+        const year = new Date().getFullYear();
+        const monthStr = format(new Date(year, selectedMonth, 1), 'yyyy-MM');
+        const monthMins = studySessions.filter(s => s.date.startsWith(monthStr)).reduce((sum, s) => sum + s.duration_mins, 0);
+        const monthHours = (monthMins / 60).toFixed(1);
+
+        // Weekly trend (last 7 days)
+        const weeklyStudy = [];
+        for (let i = 6; i >= 0; i--) {
+            const day = subDays(new Date(), i);
+            const dateStr = format(day, 'yyyy-MM-dd');
+            const dayMins = studySessions.filter(s => s.date === dateStr).reduce((sum, s) => sum + s.duration_mins, 0);
+            weeklyStudy.push({ day: format(day, 'EEE'), hours: +(dayMins / 60).toFixed(1) });
+        }
+
+        return { totalHours, sessionCount, monthHours, perSubject, weeklyStudy };
+    }, [studySessions, studySubjects, selectedMonth]);
 
     const tooltipStyle = {
         backgroundColor: '#1e1e2a',
@@ -322,6 +359,64 @@ export default function Stats() {
                                 {key.charAt(0).toUpperCase() + key.slice(1)}
                             </div>
                         ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Study Hours Section */}
+            <div className="card" style={{ marginBottom: '24px', marginTop: '24px' }}>
+                <div className="card-header">
+                    <div className="card-title"><BookOpen /> Study Hours</div>
+                </div>
+
+                <div className="stats-mini-grid" style={{ marginBottom: '16px' }}>
+                    <div className="stat-card-mini">
+                        <div className="stat-number" style={{ fontSize: '1.3rem' }}>{studyStats.totalHours}h</div>
+                        <div className="stat-label">Total Hours</div>
+                    </div>
+                    <div className="stat-card-mini">
+                        <div className="stat-number" style={{ fontSize: '1.3rem' }}>{studyStats.monthHours}h</div>
+                        <div className="stat-label">This Month</div>
+                    </div>
+                    <div className="stat-card-mini">
+                        <div className="stat-number" style={{ fontSize: '1.3rem' }}>{studyStats.sessionCount}</div>
+                        <div className="stat-label">Sessions</div>
+                    </div>
+                </div>
+
+                <div className="stats-grid">
+                    {/* Per-Subject Chart */}
+                    <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 550, marginBottom: '10px', color: 'var(--text-secondary)' }}>Hours by Subject</div>
+                        {studyStats.perSubject.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={200}>
+                                <BarChart data={studyStats.perSubject} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#22222e" horizontal={false} />
+                                    <XAxis type="number" tick={{ fill: '#5a5a70', fontSize: 10 }} axisLine={false} />
+                                    <YAxis type="category" dataKey="name" tick={{ fill: '#8b8ba0', fontSize: 11 }} axisLine={false} width={90} />
+                                    <Tooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}h`, 'Hours']} />
+                                    <Bar dataKey="hours" radius={[0, 4, 4, 0]} barSize={18}>
+                                        {studyStats.perSubject.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="empty-state"><p>Start study sessions to see breakdown</p></div>
+                        )}
+                    </div>
+
+                    {/* Weekly Study Trend */}
+                    <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 550, marginBottom: '10px', color: 'var(--text-secondary)' }}>Last 7 Days</div>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={studyStats.weeklyStudy}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#22222e" />
+                                <XAxis dataKey="day" tick={{ fill: '#5a5a70', fontSize: 11 }} axisLine={false} />
+                                <YAxis tick={{ fill: '#5a5a70', fontSize: 11 }} axisLine={false} />
+                                <Tooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}h`, 'Hours']} />
+                                <Bar dataKey="hours" fill="#a855f7" radius={[4, 4, 0, 0]} name="Study Hours" />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>

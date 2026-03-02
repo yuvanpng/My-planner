@@ -22,6 +22,8 @@ const TABLE_MAP = {
     weekly_monthly_goals: 'planner_wm_goals',
     events: 'planner_events',
     off_days: 'planner_off_days',
+    study_subjects: 'planner_study_subjects',
+    study_sessions: 'planner_study_sessions',
 };
 
 // ==================== PULL: Supabase → localStorage ====================

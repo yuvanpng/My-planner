@@ -181,3 +181,28 @@ CREATE POLICY "Allow all for anon" ON academic_projects FOR ALL USING (true) WIT
 CREATE POLICY "Allow all for anon" ON weekly_monthly_goals FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON events FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON off_days FOR ALL USING (true) WITH CHECK (true);
+
+-- Study subjects
+CREATE TABLE IF NOT EXISTS study_subjects (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  color TEXT DEFAULT '#3b82f6',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Study sessions
+CREATE TABLE IF NOT EXISTS study_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  subject_id UUID REFERENCES study_subjects(id) ON DELETE CASCADE,
+  duration_mins INT NOT NULL CHECK (duration_mins > 0),
+  date DATE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_date ON study_sessions(date);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_subject ON study_sessions(subject_id);
+
+ALTER TABLE study_subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE study_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all for anon" ON study_subjects FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON study_sessions FOR ALL USING (true) WITH CHECK (true);
