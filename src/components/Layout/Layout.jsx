@@ -1,9 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Timer } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { Toaster } from 'react-hot-toast';
 
 export default function Layout() {
+    const [timerActive, setTimerActive] = useState(false);
+
+    // Poll localStorage to detect active timer (works across pages)
+    useEffect(() => {
+        function check() {
+            try {
+                const raw = localStorage.getItem('study_timer_state');
+                if (!raw) { setTimerActive(false); return; }
+                const state = JSON.parse(raw);
+                setTimerActive(state.status === 'running' || state.status === 'paused');
+            } catch { setTimerActive(false); }
+        }
+        check();
+        const id = setInterval(check, 2000);
+        return () => clearInterval(id);
+    }, []);
+
     return (
         <div className="app-layout">
             <Sidebar />
@@ -18,7 +36,10 @@ export default function Layout() {
                     <span>Today</span>
                 </NavLink>
                 <NavLink to="/study" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
-                    <Timer size={20} />
+                    <div style={{ position: 'relative', display: 'inline-flex' }}>
+                        <Timer size={20} />
+                        {timerActive && <span className="timer-active-dot" />}
+                    </div>
                     <span>Study</span>
                 </NavLink>
                 <NavLink to="/stats" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>

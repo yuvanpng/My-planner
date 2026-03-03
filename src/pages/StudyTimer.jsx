@@ -15,6 +15,39 @@ const PRESETS = [
     { label: '90m', mins: 90 },
 ];
 
+const TIMER_STATE_KEY = 'study_timer_state';
+
+// Persist timer state to localStorage
+function saveTimerState(state) {
+    localStorage.setItem(TIMER_STATE_KEY, JSON.stringify(state));
+}
+
+function loadTimerState() {
+    try {
+        const raw = localStorage.getItem(TIMER_STATE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch { return null; }
+}
+
+function clearTimerState() {
+    localStorage.removeItem(TIMER_STATE_KEY);
+}
+
+// Calculate elapsed seconds from persisted state
+function calcElapsedSec(state) {
+    if (!state || !state.startedAt) return 0;
+    const now = Date.now();
+    let totalPausedMs = state.totalPausedMs || 0;
+    // If currently paused, don't include time since pausedAt
+    if (state.status === 'paused' && state.pausedAt) {
+        // elapsed = pausedAt - startedAt - totalPausedMs
+        return Math.floor((state.pausedAt - state.startedAt - totalPausedMs) / 1000);
+    }
+    // Running
+    return Math.floor((now - state.startedAt - totalPausedMs) / 1000);
+}
+
 export default function StudyTimer() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const [subjects, setSubjects] = useState(getStudySubjects());
@@ -29,14 +62,12 @@ export default function StudyTimer() {
     const [manualMins, setManualMins] = useState('');
     const [manualNote, setManualNote] = useState('');
 
-    // Timer state
+    // Timer state — derived from localStorage timestamps
     const [durationMins, setDurationMins] = useState(45);
     const [customMins, setCustomMins] = useState('');
     const [timeLeft, setTimeLeft] = useState(45 * 60);
-    const [isRunning, setIsRunning] = useState(false);
-    const [hasStarted, setHasStarted] = useState(false);
+    const [timerStatus, setTimerStatus] = useState('idle'); // 'idle' | 'running' | 'paused'
     const intervalRef = useRef(null);
-    const startTimeRef = useRef(null);
 
     const totalSeconds = durationMins * 60;
     const progress = totalSeconds > 0 ? ((totalSeconds - timeLeft) / totalSeconds) * 100 : 0;
@@ -48,36 +79,95 @@ export default function StudyTimer() {
         }
     }, [subjects]);
 
-    // Timer tick
+    // Restore timer from localStorage on mount
     useEffect(() => {
-        if (isRunning && timeLeft > 0) {
-            intervalRef.current = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(intervalRef.current);
-                        setIsRunning(false);
-                        handleTimerComplete();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(intervalRef.current);
-    }, [isRunning]);
+        const saved = loadTimerState();
+        if (!saved || saved.status === 'idle') return;
 
-    const handleTimerComplete = useCallback(() => {
-        if (!selectedSubject) return;
-        const session = addStudySession({
-            subject_id: selectedSubject,
-            duration_mins: durationMins,
+        setDurationMins(saved.durationMins);
+        setSelectedSubject(saved.selectedSubject || '');
+
+        const elapsedSec = calcElapsedSec(saved);
+        const totalSec = saved.durationMins * 60;
+        const remaining = Math.max(0, totalSec - elapsedSec);
+
+        if (remaining <= 0) {
+            // Timer completed while away — log it
+            handleAutoComplete(saved);
+            return;
+        }
+
+        setTimeLeft(remaining);
+
+        if (saved.status === 'running') {
+            setTimerStatus('running');
+        } else if (saved.status === 'paused') {
+            setTimerStatus('paused');
+        }
+    }, []);
+
+    // Handle a timer that completed while the user was on a different page
+    function handleAutoComplete(saved) {
+        if (!saved.selectedSubject) { clearTimerState(); return; }
+        addStudySession({
+            subject_id: saved.selectedSubject,
+            duration_mins: saved.durationMins,
             date: today,
         });
         setSessions(getStudySessionsForDate(today));
-        const subjectName = subjects.find(s => s.id === selectedSubject)?.name || 'Unknown';
-        toast.success(`${durationMins} min session logged for ${subjectName}!`);
+        const subjectName = subjects.find(s => s.id === saved.selectedSubject)?.name || getStudySubjects().find(s => s.id === saved.selectedSubject)?.name || 'Unknown';
+        toast.success(`${saved.durationMins} min session completed for ${subjectName}!`);
+        playSound();
+        clearTimerState();
+        setTimerStatus('idle');
+        setDurationMins(saved.durationMins);
+        setTimeLeft(saved.durationMins * 60);
+    }
 
-        // Play a notification sound
+    // Timer tick — recalculates from timestamps each second
+    useEffect(() => {
+        if (timerStatus !== 'running') {
+            clearInterval(intervalRef.current);
+            return;
+        }
+
+        function tick() {
+            const saved = loadTimerState();
+            if (!saved || saved.status !== 'running') {
+                clearInterval(intervalRef.current);
+                return;
+            }
+            const elapsedSec = calcElapsedSec(saved);
+            const totalSec = saved.durationMins * 60;
+            const remaining = Math.max(0, totalSec - elapsedSec);
+
+            setTimeLeft(remaining);
+
+            if (remaining <= 0) {
+                clearInterval(intervalRef.current);
+                // Timer complete!
+                addStudySession({
+                    subject_id: saved.selectedSubject,
+                    duration_mins: saved.durationMins,
+                    date: format(new Date(), 'yyyy-MM-dd'),
+                });
+                setSessions(getStudySessionsForDate(format(new Date(), 'yyyy-MM-dd')));
+                const subs = getStudySubjects();
+                const subjectName = subs.find(s => s.id === saved.selectedSubject)?.name || 'Unknown';
+                toast.success(`${saved.durationMins} min session logged for ${subjectName}!`);
+                playSound();
+                clearTimerState();
+                setTimerStatus('idle');
+                setTimeLeft(saved.durationMins * 60);
+            }
+        }
+
+        tick(); // run immediately
+        intervalRef.current = setInterval(tick, 1000);
+        return () => clearInterval(intervalRef.current);
+    }, [timerStatus]);
+
+    function playSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
@@ -90,55 +180,84 @@ export default function StudyTimer() {
             osc.start();
             setTimeout(() => { osc.stop(); ctx.close(); }, 300);
         } catch (e) { /* ignore */ }
-    }, [selectedSubject, durationMins, today, subjects]);
+    }
 
     function handleStart() {
         if (!selectedSubject) {
             toast.error('Select a subject first');
             return;
         }
-        setIsRunning(true);
-        setHasStarted(true);
-        if (!startTimeRef.current) startTimeRef.current = Date.now();
+
+        const saved = loadTimerState();
+
+        if (timerStatus === 'paused' && saved && saved.status === 'paused') {
+            // Resume — add pause duration to totalPausedMs
+            const pauseDuration = Date.now() - saved.pausedAt;
+            const newState = {
+                ...saved,
+                status: 'running',
+                pausedAt: null,
+                totalPausedMs: (saved.totalPausedMs || 0) + pauseDuration,
+            };
+            saveTimerState(newState);
+        } else {
+            // Fresh start
+            const newState = {
+                status: 'running',
+                startedAt: Date.now(),
+                pausedAt: null,
+                totalPausedMs: 0,
+                durationMins,
+                selectedSubject,
+            };
+            saveTimerState(newState);
+        }
+        setTimerStatus('running');
     }
 
     function handlePause() {
-        setIsRunning(false);
+        const saved = loadTimerState();
+        if (saved) {
+            saveTimerState({ ...saved, status: 'paused', pausedAt: Date.now() });
+        }
+        setTimerStatus('paused');
         clearInterval(intervalRef.current);
     }
 
     function handleReset() {
-        setIsRunning(false);
-        setHasStarted(false);
         clearInterval(intervalRef.current);
+        clearTimerState();
+        setTimerStatus('idle');
         setTimeLeft(durationMins * 60);
-        startTimeRef.current = null;
     }
 
     function handleStop() {
         // Save partial session
-        if (!selectedSubject || !hasStarted) return;
-        const elapsedMins = Math.round((totalSeconds - timeLeft) / 60);
-        if (elapsedMins >= 1) {
+        const saved = loadTimerState();
+        if (!saved) { handleReset(); return; }
+
+        const elapsedSec = calcElapsedSec(saved);
+        const elapsedMins = Math.round(elapsedSec / 60);
+        if (elapsedMins >= 1 && saved.selectedSubject) {
             addStudySession({
-                subject_id: selectedSubject,
+                subject_id: saved.selectedSubject,
                 duration_mins: elapsedMins,
                 date: today,
             });
             setSessions(getStudySessionsForDate(today));
-            const subjectName = subjects.find(s => s.id === selectedSubject)?.name || 'Unknown';
+            const subjectName = subjects.find(s => s.id === saved.selectedSubject)?.name || 'Unknown';
             toast.success(`${elapsedMins} min session logged for ${subjectName}!`);
         }
         handleReset();
     }
 
     function setPresetDuration(mins) {
-        if (isRunning) return;
+        if (timerStatus === 'running') return;
         setDurationMins(mins);
         setTimeLeft(mins * 60);
-        setHasStarted(false);
+        setTimerStatus('idle');
         setCustomMins('');
-        startTimeRef.current = null;
+        clearTimerState();
     }
 
     function handleCustomDuration() {
@@ -196,6 +315,8 @@ export default function StudyTimer() {
         setShowManualAdd(false);
     }
 
+    const isRunning = timerStatus === 'running';
+    const hasStarted = timerStatus !== 'idle';
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     const timeDisplay = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
