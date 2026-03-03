@@ -41,8 +41,15 @@ export async function pullFromSupabase() {
             const { data, error } = results[i];
             if (!error && data) {
                 const localKey = TABLE_MAP[table];
-                localStorage.setItem(localKey, JSON.stringify(data));
-                if (data.length > 0) hasData = true;
+                // Deduplicate by id to prevent Supabase duplicate rows from polluting localStorage
+                const seen = new Set();
+                const deduped = data.filter(row => {
+                    if (row.id && seen.has(row.id)) return false;
+                    if (row.id) seen.add(row.id);
+                    return true;
+                });
+                localStorage.setItem(localKey, JSON.stringify(deduped));
+                if (deduped.length > 0) hasData = true;
             }
         });
 

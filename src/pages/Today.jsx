@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, addDays, subDays, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Schedule from '../components/Planner/Schedule';
@@ -6,16 +6,12 @@ import Checklist from '../components/Planner/Checklist';
 import DailyHabits from '../components/Planner/DailyHabits';
 import DailyGoals from '../components/Planner/DailyGoals';
 import DeadlineAlerts from '../components/Planner/DeadlineAlerts';
-import { seedDefaultData } from '../lib/store';
-import { useEffect } from 'react';
 
 export default function Today() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const dateStr = format(currentDate, 'yyyy-MM-dd');
 
-    useEffect(() => {
-        seedDefaultData();
-    }, []);
+
 
     const dayName = format(currentDate, 'EEEE');
     const dateDisplay = format(currentDate, 'MMMM d, yyyy');

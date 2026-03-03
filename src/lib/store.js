@@ -224,7 +224,7 @@ export function addHabit(habit) {
     const newHabit = { id: generateId(), icon: '', category: 'general', sort_order: all.length, is_active: true, created_at: new Date().toISOString(), ...habit };
     all.push(newHabit);
     setStore(STORAGE_KEYS.HABITS, all);
-    pushInsert('daily_habits', newHabit);
+    pushUpsert('daily_habits', newHabit);
     return newHabit;
 }
 
@@ -284,7 +284,7 @@ export function addDailyGoal(goal) {
     const newGoal = { id: generateId(), is_active: true, sort_order: all.length, created_at: new Date().toISOString(), ...goal };
     all.push(newGoal);
     setStore(STORAGE_KEYS.GOALS, all);
-    pushInsert('daily_goals', newGoal);
+    pushUpsert('daily_goals', newGoal);
     return newGoal;
 }
 
@@ -669,7 +669,8 @@ export function deleteStudySession(id) {
 // ==================== SEED DEFAULT HABITS & GOALS ====================
 export function seedDefaultData() {
     const habits = getStore(STORAGE_KEYS.HABITS);
-    if (habits.length === 0) {
+    const activeHabits = habits.filter(h => h.is_active);
+    if (activeHabits.length === 0 && habits.length === 0) {
         const defaults = [
             { name: 'Water', category: 'morning', sort_order: 0 },
             { name: 'Breakfast', category: 'morning', sort_order: 1 },
@@ -684,7 +685,8 @@ export function seedDefaultData() {
     }
 
     const goals = getStore(STORAGE_KEYS.GOALS);
-    if (goals.length === 0) {
+    const activeGoals = goals.filter(g => g.is_active);
+    if (activeGoals.length === 0 && goals.length === 0) {
         const defaults = [
             { name: 'Gym / Exercise', category: 'physical', sort_order: 0 },
             { name: 'Coding Practice', category: 'technical', sort_order: 0 },
