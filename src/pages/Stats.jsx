@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { format, subDays, eachDayOfInterval, startOfMonth, endOfMonth, subMonths, differenceInDays } from 'date-fns';
-import { BarChart3, Flame, TrendingUp, Activity, Star, Award, Zap, Calendar, BookOpen } from 'lucide-react';
+import { BarChart3, Flame, TrendingUp, Activity, Star, Award, Zap, Calendar, BookOpen, Trophy, CheckCircle, Target, Timer } from 'lucide-react';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, PieChart, Pie, Cell, ComposedChart, Legend } from 'recharts';
-import { getAllHabits, getAllHabitLogs, getDailyGoals, getAllGoalLogs, getOffDays, calculateStreak, isBestDay, getAllJournalEntries, getAllStudySessions, getStudySubjects } from '../lib/store';
+import { getAllHabits, getAllHabitLogs, getDailyGoals, getAllGoalLogs, getOffDays, calculateStreak, isBestDay, getAllJournalEntries, getAllStudySessions, getStudySubjects, getHabits, getHabitLogsForDate, getGoalLogsForDate, getScheduleForDate, getScheduleDoneForDate, getStudySessionsForDate } from '../lib/store';
 
 const GOAL_COLORS = {
     physical: '#f97316',
@@ -37,6 +37,45 @@ export default function Stats() {
     // Heatmap data
     const yesterday = subDays(new Date(), 1);
     const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+    // ==================== TODAY'S PRODUCTIVITY SCORE ====================
+    const productivityScore = useMemo(() => {
+        const activeHabits = getHabits();
+        const todayHabitLogs = getHabitLogsForDate(todayStr);
+        const habitsCompleted = todayHabitLogs.filter(l => l.completed).length;
+        const habitsTotal = activeHabits.length;
+        const habitPct = habitsTotal > 0 ? habitsCompleted / habitsTotal : 0;
+
+        const activeGoals = goals;
+        const todayGoalLogs = getGoalLogsForDate(todayStr);
+        const goalsCompleted = todayGoalLogs.filter(l => l.completed).length;
+        const goalsTotal = activeGoals.length;
+        const goalPct = goalsTotal > 0 ? goalsCompleted / goalsTotal : 0;
+
+        const scheduleEntries = getScheduleForDate(todayStr).filter(e => e.activity && e.activity.trim());
+        const scheduleDone = getScheduleDoneForDate(todayStr).filter(d => d.done);
+        const scheduleFilled = scheduleEntries.length;
+        const scheduleCompleted = scheduleDone.length;
+        const schedulePct = scheduleFilled > 0 ? scheduleCompleted / scheduleFilled : 0;
+
+        const todaySessions = getStudySessionsForDate(todayStr);
+        const studyMins = todaySessions.reduce((sum, s) => sum + s.duration_mins, 0);
+        const studyHours = +(studyMins / 60).toFixed(1);
+        const STUDY_TARGET_MINS = 180; // 3 hours target
+        const studyPct = Math.min(studyMins / STUDY_TARGET_MINS, 1);
+
+        // Weighted score: Habits 30%, Goals 30%, Schedule 25%, Study 15%
+        const score = Math.round((habitPct * 30 + goalPct * 30 + schedulePct * 25 + studyPct * 15));
+
+        return {
+            score,
+            habitsCompleted, habitsTotal,
+            goalsCompleted, goalsTotal,
+            scheduleCompleted, scheduleFilled,
+            studyHours,
+            schedulePct: scheduleFilled > 0 ? Math.round(schedulePct * 100) : 0,
+        };
+    }, [todayStr, goals]);
 
     const heatmapData = useMemo(() => {
         const startDate = subDays(new Date(), 365);
@@ -240,6 +279,66 @@ export default function Stats() {
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-warning)' }}>
                     <strong>Best Day</strong> = at least 1 goal done in 3 out of 4 categories (Physical / Technical / Mental / Consume)
                 </span>
+            </div>
+
+            {/* Today's Productivity Score */}
+            <div className="productivity-score-card card" style={{ marginBottom: '24px' }}>
+                <div className="card-header">
+                    <div className="card-title"><Trophy /> Today's Productivity Score</div>
+                </div>
+                <div className="productivity-score-body">
+                    <div className="productivity-ring-wrap">
+                        <svg className="productivity-ring" viewBox="0 0 120 120">
+                            <circle className="productivity-ring-bg" cx="60" cy="60" r="52" />
+                            <circle
+                                className="productivity-ring-fill"
+                                cx="60" cy="60" r="52"
+                                style={{
+                                    strokeDasharray: `${2 * Math.PI * 52}`,
+                                    strokeDashoffset: `${2 * Math.PI * 52 * (1 - productivityScore.score / 100)}`,
+                                    stroke: productivityScore.score >= 80 ? '#10b981' : productivityScore.score >= 50 ? '#f59e0b' : '#ef4444',
+                                }}
+                            />
+                        </svg>
+                        <div className="productivity-ring-label">
+                            <span className="productivity-ring-pct">{productivityScore.score}%</span>
+                        </div>
+                    </div>
+                    <div className="productivity-metrics">
+                        <div className="productivity-metric">
+                            <div className="productivity-metric-icon" style={{ background: 'rgba(124,92,252,0.12)', color: '#7c5cfc' }}><CheckCircle size={16} /></div>
+                            <div className="productivity-metric-info">
+                                <span className="productivity-metric-label">Schedule</span>
+                                <span className="productivity-metric-value">{productivityScore.schedulePct}%</span>
+                            </div>
+                            <div className="productivity-metric-bar"><div className="productivity-metric-fill" style={{ width: `${productivityScore.schedulePct}%`, background: '#7c5cfc' }} /></div>
+                        </div>
+                        <div className="productivity-metric">
+                            <div className="productivity-metric-icon" style={{ background: 'rgba(92,224,216,0.12)', color: '#5ce0d8' }}><Zap size={16} /></div>
+                            <div className="productivity-metric-info">
+                                <span className="productivity-metric-label">Habits</span>
+                                <span className="productivity-metric-value">{productivityScore.habitsCompleted}/{productivityScore.habitsTotal}</span>
+                            </div>
+                            <div className="productivity-metric-bar"><div className="productivity-metric-fill" style={{ width: `${productivityScore.habitsTotal > 0 ? (productivityScore.habitsCompleted / productivityScore.habitsTotal * 100) : 0}%`, background: '#5ce0d8' }} /></div>
+                        </div>
+                        <div className="productivity-metric">
+                            <div className="productivity-metric-icon" style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316' }}><Target size={16} /></div>
+                            <div className="productivity-metric-info">
+                                <span className="productivity-metric-label">Goals</span>
+                                <span className="productivity-metric-value">{productivityScore.goalsCompleted}/{productivityScore.goalsTotal}</span>
+                            </div>
+                            <div className="productivity-metric-bar"><div className="productivity-metric-fill" style={{ width: `${productivityScore.goalsTotal > 0 ? (productivityScore.goalsCompleted / productivityScore.goalsTotal * 100) : 0}%`, background: '#f97316' }} /></div>
+                        </div>
+                        <div className="productivity-metric">
+                            <div className="productivity-metric-icon" style={{ background: 'rgba(168,85,247,0.12)', color: '#a855f7' }}><Timer size={16} /></div>
+                            <div className="productivity-metric-info">
+                                <span className="productivity-metric-label">Study</span>
+                                <span className="productivity-metric-value">{productivityScore.studyHours}h</span>
+                            </div>
+                            <div className="productivity-metric-bar"><div className="productivity-metric-fill" style={{ width: `${Math.min(productivityScore.studyHours / 3 * 100, 100)}%`, background: '#a855f7' }} /></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Heatmap */}

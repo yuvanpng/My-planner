@@ -1451,6 +1451,135 @@ body {
   right: 3px;
 }
 
+/* ======================== PRODUCTIVITY SCORE ======================== */
+.productivity-score-body {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 8px 0;
+}
+
+.productivity-ring-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.productivity-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.15));
+}
+
+.productivity-ring-bg {
+  fill: none;
+  stroke: var(--bg-elevated);
+  stroke-width: 10;
+}
+
+.productivity-ring-fill {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+}
+
+.productivity-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.productivity-ring-pct {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.productivity-metrics {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.productivity-metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.productivity-metric-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.productivity-metric-info {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.productivity-metric-label {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.productivity-metric-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.productivity-metric-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.productivity-metric-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 600px) {
+  .productivity-score-body {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .productivity-ring-wrap {
+    width: 100px;
+    height: 100px;
+  }
+
+  .productivity-ring-pct {
+    font-size: 1.5rem;
+  }
+
+  .productivity-metrics {
+    width: 100%;
+  }
+}
+
 /* ======================== STATS V2 ======================== */
 .stats-mini-grid {
   display: grid;
