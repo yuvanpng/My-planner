@@ -206,3 +206,17 @@ ALTER TABLE study_sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all for anon" ON study_subjects FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON study_sessions FOR ALL USING (true) WITH CHECK (true);
+
+-- Add note column for manual study session entries
+ALTER TABLE study_sessions ADD COLUMN IF NOT EXISTS note TEXT DEFAULT '';
+
+-- Lifetime goals
+CREATE TABLE IF NOT EXISTS lifetime_goals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE lifetime_goals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON lifetime_goals FOR ALL USING (true) WITH CHECK (true);

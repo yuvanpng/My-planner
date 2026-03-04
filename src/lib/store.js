@@ -26,6 +26,7 @@ const STORAGE_KEYS = {
     SCHEDULE_HISTORY: 'planner_schedule_history',
     STUDY_SUBJECTS: 'planner_study_subjects',
     STUDY_SESSIONS: 'planner_study_sessions',
+    LIFETIME_GOALS: 'planner_lifetime_goals',
 };
 
 function generateId() {
@@ -664,6 +665,42 @@ export function deleteStudySession(id) {
     const all = getStore(STORAGE_KEYS.STUDY_SESSIONS);
     setStore(STORAGE_KEYS.STUDY_SESSIONS, all.filter(s => s.id !== id));
     pushDelete('study_sessions', id);
+}
+
+// ==================== LIFETIME GOALS ====================
+export function getLifetimeGoals() {
+    return getStore(STORAGE_KEYS.LIFETIME_GOALS);
+}
+
+export function addLifetimeGoal(title) {
+    const all = getStore(STORAGE_KEYS.LIFETIME_GOALS);
+    const goal = {
+        id: generateId(),
+        title: title.trim(),
+        completed: false,
+        created_at: new Date().toISOString(),
+    };
+    all.push(goal);
+    setStore(STORAGE_KEYS.LIFETIME_GOALS, all);
+    pushUpsert('lifetime_goals', goal);
+    return goal;
+}
+
+export function toggleLifetimeGoal(id) {
+    const all = getStore(STORAGE_KEYS.LIFETIME_GOALS);
+    const idx = all.findIndex(g => g.id === id);
+    if (idx >= 0) {
+        all[idx].completed = !all[idx].completed;
+        setStore(STORAGE_KEYS.LIFETIME_GOALS, all);
+        pushUpdate('lifetime_goals', id, { completed: all[idx].completed });
+    }
+}
+
+export function deleteLifetimeGoal(id) {
+    let all = getStore(STORAGE_KEYS.LIFETIME_GOALS);
+    all = all.filter(g => g.id !== id);
+    setStore(STORAGE_KEYS.LIFETIME_GOALS, all);
+    pushDelete('lifetime_goals', id);
 }
 
 // ==================== SEED DEFAULT HABITS & GOALS ====================

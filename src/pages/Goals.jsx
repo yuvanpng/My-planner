@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Target, Calendar, Plus, Edit2, Trash2, CalendarDays } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, addMonths } from 'date-fns';
+import { Target, Calendar, Plus, Trash2, CalendarDays, Star, Check } from 'lucide-react';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import {
     getWeeklyMonthlyGoals, addWeeklyMonthlyGoal, updateWeeklyMonthlyGoal, deleteWeeklyMonthlyGoal,
     getEvents, addEvent, deleteEvent, getUpcomingEvents,
+    getLifetimeGoals, addLifetimeGoal, toggleLifetimeGoal, deleteLifetimeGoal,
 } from '../lib/store';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ export default function Goals() {
     const [monthlyGoals, setMonthlyGoals] = useState([]);
     const [events, setEvents] = useState([]);
     const [upcomingEvents, setUpcomingEvents] = useState([]);
+    const [lifetimeGoals, setLifetimeGoals] = useState([]);
 
     const [showAddWeekly, setShowAddWeekly] = useState(false);
     const [showAddMonthly, setShowAddMonthly] = useState(false);
@@ -22,6 +24,8 @@ export default function Goals() {
     const [eventDate, setEventDate] = useState('');
     const [eventTime, setEventTime] = useState('');
     const [eventDesc, setEventDesc] = useState('');
+    const [lifetimeInput, setLifetimeInput] = useState('');
+    const [showAddLifetime, setShowAddLifetime] = useState(false);
 
     useEffect(() => { load(); }, []);
 
@@ -30,6 +34,7 @@ export default function Goals() {
         setMonthlyGoals(getWeeklyMonthlyGoals('monthly'));
         setEvents(getEvents());
         setUpcomingEvents(getUpcomingEvents(7));
+        setLifetimeGoals(getLifetimeGoals());
     }
 
     function handleAddGoal(type) {
@@ -88,6 +93,26 @@ export default function Goals() {
     function handleDeleteEvent(id) {
         deleteEvent(id);
         load();
+    }
+
+    function handleAddLifetimeGoal() {
+        if (!lifetimeInput.trim()) return;
+        addLifetimeGoal(lifetimeInput.trim());
+        setLifetimeInput('');
+        setShowAddLifetime(false);
+        load();
+        toast.success('Lifetime goal added');
+    }
+
+    function handleToggleLifetimeGoal(id) {
+        toggleLifetimeGoal(id);
+        load();
+    }
+
+    function handleDeleteLifetimeGoal(id) {
+        deleteLifetimeGoal(id);
+        load();
+        toast.success('Goal removed');
     }
 
     function renderGoalList(goals, type) {
@@ -256,6 +281,53 @@ export default function Goals() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Lifetime Goals — Full Width */}
+            <div className="card" style={{ marginTop: '24px' }}>
+                <div className="card-header">
+                    <div className="card-title"><Star /> Lifetime Goals</div>
+                    <button className="btn btn-primary btn-sm" onClick={() => { setShowAddLifetime(!showAddLifetime); setLifetimeInput(''); }}>
+                        <Plus size={14} /> Add
+                    </button>
+                </div>
+
+                {showAddLifetime && (
+                    <div style={{ marginBottom: '14px', display: 'flex', gap: '8px' }}>
+                        <input
+                            className="input"
+                            value={lifetimeInput}
+                            onChange={e => setLifetimeInput(e.target.value)}
+                            placeholder="e.g. Visit Japan, Build a startup..."
+                            onKeyDown={e => e.key === 'Enter' && handleAddLifetimeGoal()}
+                            autoFocus
+                        />
+                        <button className="btn btn-primary btn-sm" onClick={handleAddLifetimeGoal}>Add</button>
+                    </div>
+                )}
+
+                {lifetimeGoals.length === 0 ? (
+                    <div className="empty-state"><p>No lifetime goals yet. Dream big!</p></div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        {lifetimeGoals.map(g => (
+                            <div key={g.id} className="checklist-item">
+                                <button
+                                    className={`checkbox ${g.completed ? 'checked' : ''}`}
+                                    onClick={() => handleToggleLifetimeGoal(g.id)}
+                                >
+                                    {g.completed && <Check />}
+                                </button>
+                                <span className={`checklist-text ${g.completed ? 'completed' : ''}`} style={{ fontSize: '0.88rem' }}>
+                                    {g.title}
+                                </span>
+                                <button className="btn-icon checklist-delete" onClick={() => handleDeleteLifetimeGoal(g.id)} style={{ width: '24px', height: '24px' }}>
+                                    <Trash2 size={13} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

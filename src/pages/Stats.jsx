@@ -35,9 +35,12 @@ export default function Stats() {
     }, [habits, habitLogs]);
 
     // Heatmap data
+    const yesterday = subDays(new Date(), 1);
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+
     const heatmapData = useMemo(() => {
         const startDate = subDays(new Date(), 365);
-        const days = eachDayOfInterval({ start: startDate, end: new Date() });
+        const days = eachDayOfInterval({ start: startDate, end: yesterday });
         return days.map(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const completedHabits = habitLogs.filter(l => l.date === dateStr && l.completed).length;
@@ -59,8 +62,8 @@ export default function Stats() {
         const year = new Date().getFullYear();
         const monthStart = startOfMonth(new Date(year, selectedMonth));
         const monthEnd = endOfMonth(new Date(year, selectedMonth));
-        const today = new Date();
-        const effectiveEnd = monthEnd > today ? today : monthEnd;
+        const effectiveEnd = monthEnd > yesterday ? yesterday : monthEnd;
+        if (effectiveEnd < monthStart) return { totalHabitCompletions: 0, totalGoalCompletions: 0, bestDaysCount: 0, daysWithActivity: 0, habitRate: 0, goalRate: 0, consistencyRate: 0, journalRate: 0, journalDays: 0, activeDays: 0, offDayCount: 0, dailyData: [] };
         const days = eachDayOfInterval({ start: monthStart, end: effectiveEnd });
 
         let totalHabitCompletions = 0;
@@ -115,7 +118,7 @@ export default function Stats() {
     // Weekly trend data
     const weeklyData = useMemo(() => {
         const data = [];
-        for (let i = 6; i >= 0; i--) {
+        for (let i = 7; i >= 1; i--) {
             const day = subDays(new Date(), i);
             const dateStr = format(day, 'yyyy-MM-dd');
             data.push({
@@ -134,22 +137,22 @@ export default function Stats() {
             const catGoalIds = goals.filter(g => g.category === cat).map(g => g.id);
             return {
                 name: cat.charAt(0).toUpperCase() + cat.slice(1),
-                value: goalLogs.filter(l => catGoalIds.includes(l.goal_id) && l.completed).length,
+                value: goalLogs.filter(l => catGoalIds.includes(l.goal_id) && l.completed && l.date !== todayStr).length,
                 color: GOAL_COLORS[cat],
             };
         }).filter(d => d.value > 0);
     }, [goals, goalLogs]);
 
     // Overall
-    const totalHabitCompletions = habitLogs.filter(l => l.completed).length;
-    const totalGoalCompletions = goalLogs.filter(l => l.completed).length;
+    const totalHabitCompletions = habitLogs.filter(l => l.completed && l.date !== todayStr).length;
+    const totalGoalCompletions = goalLogs.filter(l => l.completed && l.date !== todayStr).length;
     const maxCurrentStreak = habitStats.length > 0 ? Math.max(...habitStats.map(h => h.currentStreak)) : 0;
     const maxBestStreak = habitStats.length > 0 ? Math.max(...habitStats.map(h => h.bestStreak)) : 0;
 
     // Count total best days (last 30 days)
     const recentBestDays = useMemo(() => {
         let count = 0;
-        for (let i = 0; i < 30; i++) {
+        for (let i = 1; i <= 30; i++) {
             const dateStr = format(subDays(new Date(), i), 'yyyy-MM-dd');
             if (isBestDay(dateStr)) count++;
         }
@@ -158,13 +161,14 @@ export default function Stats() {
 
     // Study stats
     const studyStats = useMemo(() => {
-        const totalMins = studySessions.reduce((sum, s) => sum + s.duration_mins, 0);
+        const pastSessions = studySessions.filter(s => s.date !== todayStr);
+        const totalMins = pastSessions.reduce((sum, s) => sum + s.duration_mins, 0);
         const totalHours = (totalMins / 60).toFixed(1);
-        const sessionCount = studySessions.length;
+        const sessionCount = pastSessions.length;
 
         // Per-subject breakdown
         const subjectMap = {};
-        studySessions.forEach(s => {
+        pastSessions.forEach(s => {
             if (!subjectMap[s.subject_id]) subjectMap[s.subject_id] = 0;
             subjectMap[s.subject_id] += s.duration_mins;
         });
@@ -176,12 +180,12 @@ export default function Stats() {
         // This month
         const year = new Date().getFullYear();
         const monthStr = format(new Date(year, selectedMonth, 1), 'yyyy-MM');
-        const monthMins = studySessions.filter(s => s.date.startsWith(monthStr)).reduce((sum, s) => sum + s.duration_mins, 0);
+        const monthMins = pastSessions.filter(s => s.date.startsWith(monthStr)).reduce((sum, s) => sum + s.duration_mins, 0);
         const monthHours = (monthMins / 60).toFixed(1);
 
         // Weekly trend (last 7 days)
         const weeklyStudy = [];
-        for (let i = 6; i >= 0; i--) {
+        for (let i = 7; i >= 1; i--) {
             const day = subDays(new Date(), i);
             const dateStr = format(day, 'yyyy-MM-dd');
             const dayMins = studySessions.filter(s => s.date === dateStr).reduce((sum, s) => sum + s.duration_mins, 0);

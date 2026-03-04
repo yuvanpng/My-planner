@@ -24,6 +24,7 @@ const TABLE_MAP = {
     off_days: 'planner_off_days',
     study_subjects: 'planner_study_subjects',
     study_sessions: 'planner_study_sessions',
+    lifetime_goals: 'planner_lifetime_goals',
 };
 
 // ==================== PULL: Supabase → localStorage ====================
