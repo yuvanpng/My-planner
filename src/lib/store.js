@@ -27,6 +27,8 @@ const STORAGE_KEYS = {
     STUDY_SUBJECTS: 'planner_study_subjects',
     STUDY_SESSIONS: 'planner_study_sessions',
     LIFETIME_GOALS: 'planner_lifetime_goals',
+    WEEKLY_PLAN: 'planner_weekly_plan',
+    TOPIC_TRACKER: 'planner_topic_tracker',
 };
 
 function generateId() {
@@ -147,6 +149,23 @@ export function getTodosForDate(date, category = null) {
         return false;
     });
     if (category) filtered = filtered.filter(t => t.category === category);
+
+    // Inject items from weekly plan for this date
+    const weeklyPlanItems = getWeeklyPlanForDate(date);
+    const convertedWeeklyItems = weeklyPlanItems.map(item => ({
+        id: `weekly-${item.id}`,
+        title: item.activity,
+        completed: item.completed,
+        category: 'academic',
+        date: date,
+        isWeeklyPlan: true,
+        weeklyId: item.id
+    }));
+
+    if (!category || category === 'academic') {
+        filtered = [...filtered, ...convertedWeeklyItems];
+    }
+
     return filtered;
 }
 
@@ -208,6 +227,9 @@ export function toggleTodo(id) {
         all[idx].updated_at = new Date().toISOString();
         setStore(STORAGE_KEYS.TODOS, all);
         pushUpdate('todo_items', id, { completed: all[idx].completed, updated_at: all[idx].updated_at });
+    } else if (id.startsWith('weekly-')) {
+        const weeklyId = id.replace('weekly-', '');
+        toggleWeeklyPlanComplete(weeklyId);
     }
 }
 
@@ -703,7 +725,83 @@ export function deleteLifetimeGoal(id) {
     pushDelete('lifetime_goals', id);
 }
 
-// ==================== SEED DEFAULT HABITS & GOALS ====================
+// ==================== WEEKLY PLAN ====================
+export function getWeeklyPlanForWeek(weekStartDate) {
+    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
+    return all.filter(e => e.week_start === weekStartDate);
+}
+
+export function getWeeklyPlanForDate(date) {
+    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
+    return all.filter(e => e.date === date);
+}
+
+export function upsertWeeklyPlanEntry(entry) {
+    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
+    const idx = all.findIndex(e => e.id === entry.id);
+    let record;
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...entry, updated_at: new Date().toISOString() };
+        record = all[idx];
+    } else {
+        record = { id: generateId(), completed: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...entry };
+        all.push(record);
+    }
+    setStore(STORAGE_KEYS.WEEKLY_PLAN, all);
+    pushUpsert('weekly_plan', record, ['id']);
+    return record;
+}
+
+export function toggleWeeklyPlanComplete(id) {
+    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
+    const idx = all.findIndex(e => e.id === id);
+    if (idx >= 0) {
+        all[idx].completed = !all[idx].completed;
+        all[idx].updated_at = new Date().toISOString();
+        setStore(STORAGE_KEYS.WEEKLY_PLAN, all);
+        pushUpdate('weekly_plan', id, { completed: all[idx].completed, updated_at: all[idx].updated_at });
+    }
+}
+
+export function deleteWeeklyPlanEntry(id) {
+    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
+    setStore(STORAGE_KEYS.WEEKLY_PLAN, all.filter(e => e.id !== id));
+    pushDelete('weekly_plan', id);
+}
+
+// ==================== TOPIC TRACKER ====================
+export function getTopicsBySubject(subjectId) {
+    const all = getStore(STORAGE_KEYS.TOPIC_TRACKER);
+    return all.filter(t => t.subject_id === subjectId);
+}
+
+export function getAllTopics() {
+    return getStore(STORAGE_KEYS.TOPIC_TRACKER);
+}
+
+export function upsertTopic(topic) {
+    const all = getStore(STORAGE_KEYS.TOPIC_TRACKER);
+    const idx = all.findIndex(t => t.id === topic.id);
+    let record;
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...topic, updated_at: new Date().toISOString() };
+        record = all[idx];
+    } else {
+        record = { id: generateId(), status: 'not_started', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...topic };
+        all.push(record);
+    }
+    setStore(STORAGE_KEYS.TOPIC_TRACKER, all);
+    pushUpsert('topic_tracker', record, ['id']);
+    return record;
+}
+
+export function deleteTopic(id) {
+    const all = getStore(STORAGE_KEYS.TOPIC_TRACKER);
+    setStore(STORAGE_KEYS.TOPIC_TRACKER, all.filter(t => t.id !== id));
+    pushDelete('topic_tracker', id);
+}
+
+// ==================== SEED DEFAULT DATA & CLEANUP ====================
 export function seedDefaultData() {
     const habits = getStore(STORAGE_KEYS.HABITS);
     const activeHabits = habits.filter(h => h.is_active);

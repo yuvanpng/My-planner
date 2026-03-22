@@ -111,6 +111,11 @@ export default function Checklist({ date }) {
                                 <span className={`checklist-text ${todo.completed ? 'completed' : ''}`}>
                                     {todo.title}
                                 </span>
+                                {todo.isWeeklyPlan && (
+                                    <span style={{ fontSize: '0.6rem', color: 'var(--accent-primary)', marginLeft: '6px', background: 'var(--accent-primary-dim)', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                                        weekly plan
+                                    </span>
+                                )}
                                 {persistent && (
                                     <span style={{ fontSize: '0.6rem', color: 'var(--accent-warning)', marginLeft: '6px' }}>
                                         carried over

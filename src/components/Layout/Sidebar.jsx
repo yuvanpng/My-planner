@@ -78,6 +78,10 @@ export default function Sidebar() {
                 </NavLink>
 
                 <div className="sidebar-section-label">Planning</div>
+                <NavLink to="/planner" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <CalendarDays />
+                    Weekly Planner
+                </NavLink>
                 <NavLink to="/goals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <Target />
                     Goals & Events
