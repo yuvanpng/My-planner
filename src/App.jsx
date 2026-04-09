@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
+import PasswordLock from './components/Auth/PasswordLock';
 import Today from './pages/Today';
 import Stats from './pages/Stats';
 import Journal from './pages/Journal';
@@ -11,19 +12,21 @@ import WeeklyPlanner from './pages/WeeklyPlanner';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Today />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/academic" element={<Academic />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/calendar" element={<CalendarView />} />
-          <Route path="/study" element={<StudyTimer />} />
-          <Route path="/planner" element={<WeeklyPlanner />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <PasswordLock>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Today />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/journal" element={<Journal />} />
+            <Route path="/academic" element={<Academic />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/calendar" element={<CalendarView />} />
+            <Route path="/study" element={<StudyTimer />} />
+            <Route path="/planner" element={<WeeklyPlanner />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </PasswordLock>
   );
 }
