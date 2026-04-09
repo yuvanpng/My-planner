@@ -110,6 +110,14 @@ export function getScheduleHints() {
     return history.sort((a, b) => b.count - a.count).map(h => h.text);
 }
 
+export function deleteScheduleHint(text) {
+    const history = getStore(STORAGE_KEYS.SCHEDULE_HISTORY);
+    const normalized = text.trim().toLowerCase();
+    const updated = history.filter(h => h.text.toLowerCase() !== normalized);
+    setStore(STORAGE_KEYS.SCHEDULE_HISTORY, updated);
+    pushDeleteMatch('schedule_history', { text: text.trim() });
+}
+
 function addScheduleHint(text) {
     if (!text || !text.trim()) return;
     const normalized = text.trim();

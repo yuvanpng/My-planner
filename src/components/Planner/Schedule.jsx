@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Clock, X, Check, GripVertical } from 'lucide-react';
 import {
     getScheduleForDate, upsertScheduleEntry, deleteScheduleEntry,
-    getScheduleHints, isScheduleSlotDone, toggleScheduleSlotDone, getTodosForDate,
+    getScheduleHints, deleteScheduleHint, isScheduleSlotDone, toggleScheduleSlotDone, getTodosForDate,
 } from '../../lib/store';
 
 const TIME_SLOTS = [];
@@ -103,6 +103,17 @@ export default function Schedule({ date }) {
         if (inputRef.current) inputRef.current.focus();
     }
 
+    function handleDeleteHint(e, hint) {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteScheduleHint(hint);
+        const updatedHints = hints.map(h => h).filter(h => h.toLowerCase() !== hint.toLowerCase());
+        setHints(updatedHints);
+        const updatedFiltered = filteredHints.filter(h => h.toLowerCase() !== hint.toLowerCase());
+        setFilteredHints(updatedFiltered);
+        if (updatedFiltered.length === 0) setShowHints(false);
+    }
+
     function handleClear(slot) {
         deleteScheduleEntry(date, slot);
         setEditingSlot(null);
@@ -188,7 +199,14 @@ export default function Schedule({ date }) {
                                                 className="schedule-hint-item"
                                                 onMouseDown={e => { e.preventDefault(); selectHint(hint); }}
                                             >
-                                                {hint}
+                                                <span>{hint}</span>
+                                                <button
+                                                    className="hint-delete-btn"
+                                                    onMouseDown={e => handleDeleteHint(e, hint)}
+                                                    title="Remove from history"
+                                                >
+                                                    <X size={12} />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>

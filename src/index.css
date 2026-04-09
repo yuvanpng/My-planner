@@ -1333,11 +1333,39 @@ body {
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .schedule-hint-item:hover {
   background: var(--accent-primary-dim);
   color: var(--text-primary);
+}
+
+.hint-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.schedule-hint-item:hover .hint-delete-btn {
+  opacity: 0.6;
+}
+
+.hint-delete-btn:hover {
+  opacity: 1 !important;
+  background: var(--accent-danger-dim);
+  color: var(--accent-danger);
 }
 
 /* ======================== CALENDAR VIEW ======================== */
