@@ -220,3 +220,19 @@ CREATE TABLE IF NOT EXISTS lifetime_goals (
 
 ALTER TABLE lifetime_goals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all for anon" ON lifetime_goals FOR ALL USING (true) WITH CHECK (true);
+
+-- Idea Vault storage
+CREATE TABLE IF NOT EXISTS ideas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  text TEXT NOT NULL,
+  tags TEXT[] DEFAULT '{}',
+  energy TEXT CHECK (energy IN ('low', 'medium', 'high')),
+  duration TEXT CHECK (duration IN ('short', 'medium', 'long')),
+  is_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON ideas FOR ALL USING (true) WITH CHECK (true);
+

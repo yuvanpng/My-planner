@@ -29,6 +29,7 @@ const STORAGE_KEYS = {
     LIFETIME_GOALS: 'planner_lifetime_goals',
     WEEKLY_PLAN: 'planner_weekly_plan',
     TOPIC_TRACKER: 'planner_topic_tracker',
+    IDEAS: 'planner_ideas',
 };
 
 function generateId() {
@@ -807,6 +808,46 @@ export function deleteTopic(id) {
     const all = getStore(STORAGE_KEYS.TOPIC_TRACKER);
     setStore(STORAGE_KEYS.TOPIC_TRACKER, all.filter(t => t.id !== id));
     pushDelete('topic_tracker', id);
+}
+
+// ==================== IDEAS / BRAIN DUMP ====================
+export function getIdeas() {
+    return getStore(STORAGE_KEYS.IDEAS);
+}
+
+export function addIdea(idea) {
+    const all = getStore(STORAGE_KEYS.IDEAS);
+    const newIdea = {
+        id: generateId(),
+        text: '',
+        tags: [],
+        energy: 'medium', // low, medium, high
+        duration: 'medium', // short, medium, long
+        is_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...idea
+    };
+    all.push(newIdea);
+    setStore(STORAGE_KEYS.IDEAS, all);
+    pushInsert('ideas', newIdea);
+    return newIdea;
+}
+
+export function updateIdea(id, updates) {
+    const all = getStore(STORAGE_KEYS.IDEAS);
+    const idx = all.findIndex(i => i.id === id);
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...updates, updated_at: new Date().toISOString() };
+        setStore(STORAGE_KEYS.IDEAS, all);
+        pushUpdate('ideas', id, { ...updates, updated_at: all[idx].updated_at });
+    }
+}
+
+export function deleteIdea(id) {
+    const all = getStore(STORAGE_KEYS.IDEAS);
+    setStore(STORAGE_KEYS.IDEAS, all.filter(i => i.id !== id));
+    pushDelete('ideas', id);
 }
 
 // ==================== SEED DEFAULT DATA & CLEANUP ====================

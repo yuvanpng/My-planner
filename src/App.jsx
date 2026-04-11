@@ -9,6 +9,7 @@ import Goals from './pages/Goals';
 import CalendarView from './pages/CalendarView';
 import StudyTimer from './pages/StudyTimer';
 import WeeklyPlanner from './pages/WeeklyPlanner';
+import IdeaVault from './pages/IdeaVault';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/study" element={<StudyTimer />} />
             <Route path="/planner" element={<WeeklyPlanner />} />
+            <Route path="/ideas" element={<IdeaVault />} />
           </Route>
         </Routes>
       </BrowserRouter>

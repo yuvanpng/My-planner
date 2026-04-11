@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Timer } from 'lucide-react';
+import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Timer, Lightbulb } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { Toaster } from 'react-hot-toast';
 
@@ -61,6 +61,10 @@ export default function Layout() {
                 <NavLink to="/calendar" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
                     <CalendarDays size={20} />
                     <span>Calendar</span>
+                </NavLink>
+                <NavLink to="/ideas" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
+                    <Lightbulb size={20} />
+                    <span>Ideas</span>
                 </NavLink>
             </nav>
 
