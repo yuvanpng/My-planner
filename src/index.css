@@ -3508,3 +3508,170 @@ body {
   }
 }
 
+/* ==================== SKILL PLANNER ==================== */
+.skill-planner-page {
+  animation: fadeIn var(--transition-normal);
+}
+
+.skill-dashboard-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.skill-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  position: sticky;
+  top: 24px;
+}
+
+.skill-add-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  margin-top: 12px;
+}
+
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skill-item {
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid transparent;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.skill-item:hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+.skill-item.active {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.skill-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.skill-item-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.skill-item-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skill-detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  animation: scaleIn var(--transition-normal);
+}
+
+.skill-detail-header {
+  margin-bottom: 24px;
+}
+
+.skill-progress-container {
+  margin-top: 16px;
+  background: var(--bg);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.skill-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.skill-progress-bar-large {
+  height: 12px;
+  background: var(--surface-hover);
+  border-radius: 6px;
+  position: relative;
+  overflow: visible; /* For the glow */
+}
+
+.skill-progress-fill-large {
+  height: 100%;
+  border-radius: 6px;
+  position: relative;
+  z-index: 2;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.skill-progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 6px;
+  filter: blur(8px);
+  opacity: 0.6;
+  z-index: 1;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.glass-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.glass-row:hover {
+  background: var(--surface-hover);
+}
+
+.glass-row .opacity-on-hover {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.glass-row:hover .opacity-on-hover {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .skill-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .skill-sidebar {
+    position: static;
+  }
+}

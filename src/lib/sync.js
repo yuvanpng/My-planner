@@ -27,6 +27,10 @@ const TABLE_MAP = {
     lifetime_goals: 'planner_lifetime_goals',
     weekly_plan: 'planner_weekly_plan',
     topic_tracker: 'planner_topic_tracker',
+    ideas: 'planner_ideas',
+    focus_areas: 'planner_focus_areas',
+    focus_subtopics: 'planner_focus_subtopics',
+    focus_weekly_plan: 'planner_focus_weekly_plan',
 };
 
 // ==================== PULL: Supabase → localStorage ====================

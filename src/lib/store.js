@@ -30,6 +30,9 @@ const STORAGE_KEYS = {
     WEEKLY_PLAN: 'planner_weekly_plan',
     TOPIC_TRACKER: 'planner_topic_tracker',
     IDEAS: 'planner_ideas',
+    FOCUS_AREAS: 'planner_focus_areas',
+    FOCUS_SUBTOPICS: 'planner_focus_subtopics',
+    FOCUS_WEEKLY_PLAN: 'planner_focus_weekly_plan',
 };
 
 function generateId() {
@@ -848,6 +851,140 @@ export function deleteIdea(id) {
     const all = getStore(STORAGE_KEYS.IDEAS);
     setStore(STORAGE_KEYS.IDEAS, all.filter(i => i.id !== id));
     pushDelete('ideas', id);
+}
+
+// ==================== SKILL PLANNER (FOCUS AREAS) ====================
+export function getFocusAreas() {
+    return getStore(STORAGE_KEYS.FOCUS_AREAS);
+}
+
+export function addFocusArea(area) {
+    const all = getStore(STORAGE_KEYS.FOCUS_AREAS);
+    const newArea = {
+        id: generateId(),
+        name: '',
+        color: '#3b82f6',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...area
+    };
+    all.push(newArea);
+    setStore(STORAGE_KEYS.FOCUS_AREAS, all);
+    pushInsert('focus_areas', newArea);
+    return newArea;
+}
+
+export function updateFocusArea(id, updates) {
+    const all = getStore(STORAGE_KEYS.FOCUS_AREAS);
+    const idx = all.findIndex(a => a.id === id);
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...updates, updated_at: new Date().toISOString() };
+        setStore(STORAGE_KEYS.FOCUS_AREAS, all);
+        pushUpdate('focus_areas', id, { ...updates, updated_at: all[idx].updated_at });
+    }
+}
+
+export function deleteFocusArea(id) {
+    const all = getStore(STORAGE_KEYS.FOCUS_AREAS);
+    setStore(STORAGE_KEYS.FOCUS_AREAS, all.filter(a => a.id !== id));
+    pushDelete('focus_areas', id);
+    
+    // Cleanup subtopics and weekly plans
+    const subtopics = getStore(STORAGE_KEYS.FOCUS_SUBTOPICS);
+    setStore(STORAGE_KEYS.FOCUS_SUBTOPICS, subtopics.filter(s => s.focus_area_id !== id));
+    pushDeleteMatch('focus_subtopics', { focus_area_id: id });
+
+    const plans = getStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN);
+    setStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN, plans.filter(p => p.focus_area_id !== id));
+    pushDeleteMatch('focus_weekly_plan', { focus_area_id: id });
+}
+
+export function getFocusSubtopics(focusAreaId) {
+    const all = getStore(STORAGE_KEYS.FOCUS_SUBTOPICS);
+    if (focusAreaId) {
+        return all.filter(s => s.focus_area_id === focusAreaId);
+    }
+    return all;
+}
+
+export function addFocusSubtopic(subtopic) {
+    const all = getStore(STORAGE_KEYS.FOCUS_SUBTOPICS);
+    const newSubtopic = {
+        id: generateId(),
+        focus_area_id: '',
+        title: '',
+        status: 'not_started', // not_started, in_progress, completed
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...subtopic
+    };
+    all.push(newSubtopic);
+    setStore(STORAGE_KEYS.FOCUS_SUBTOPICS, all);
+    pushInsert('focus_subtopics', newSubtopic);
+    return newSubtopic;
+}
+
+export function updateFocusSubtopic(id, updates) {
+    const all = getStore(STORAGE_KEYS.FOCUS_SUBTOPICS);
+    const idx = all.findIndex(s => s.id === id);
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...updates, updated_at: new Date().toISOString() };
+        setStore(STORAGE_KEYS.FOCUS_SUBTOPICS, all);
+        pushUpdate('focus_subtopics', id, { ...updates, updated_at: all[idx].updated_at });
+    }
+}
+
+export function deleteFocusSubtopic(id) {
+    const all = getStore(STORAGE_KEYS.FOCUS_SUBTOPICS);
+    setStore(STORAGE_KEYS.FOCUS_SUBTOPICS, all.filter(s => s.id !== id));
+    pushDelete('focus_subtopics', id);
+}
+
+export function getFocusWeeklyPlan(weekStart) {
+    const all = getStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN);
+    if (weekStart) {
+        return all.filter(p => p.week_start === weekStart);
+    }
+    return all;
+}
+
+export function upsertFocusWeeklyPlan(plan) {
+    const all = getStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN);
+    const idx = all.findIndex(p => p.id === plan.id);
+    let record;
+    if (idx >= 0) {
+        all[idx] = { ...all[idx], ...plan, updated_at: new Date().toISOString() };
+        record = all[idx];
+    } else {
+        record = { 
+            id: generateId(), 
+            completed: false, 
+            created_at: new Date().toISOString(), 
+            updated_at: new Date().toISOString(), 
+            ...plan 
+        };
+        all.push(record);
+    }
+    setStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN, all);
+    pushUpsert('focus_weekly_plan', record, ['id']);
+    return record;
+}
+
+export function toggleFocusWeeklyPlanComplete(id) {
+    const all = getStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN);
+    const idx = all.findIndex(p => p.id === id);
+    if (idx >= 0) {
+        all[idx].completed = !all[idx].completed;
+        all[idx].updated_at = new Date().toISOString();
+        setStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN, all);
+        pushUpdate('focus_weekly_plan', id, { completed: all[idx].completed, updated_at: all[idx].updated_at });
+    }
+}
+
+export function deleteFocusWeeklyPlan(id) {
+    const all = getStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN);
+    setStore(STORAGE_KEYS.FOCUS_WEEKLY_PLAN, all.filter(p => p.id !== id));
+    pushDelete('focus_weekly_plan', id);
 }
 
 // ==================== SEED DEFAULT DATA & CLEANUP ====================

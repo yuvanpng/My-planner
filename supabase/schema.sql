@@ -236,3 +236,66 @@ CREATE TABLE IF NOT EXISTS ideas (
 ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all for anon" ON ideas FOR ALL USING (true) WITH CHECK (true);
 
+-- Missing from previous feature
+CREATE TABLE IF NOT EXISTS topic_tracker (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  subject_id UUID REFERENCES study_subjects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  status TEXT DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS weekly_plan (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date DATE NOT NULL,
+  week_start DATE NOT NULL,
+  activity TEXT NOT NULL,
+  subject_id UUID REFERENCES study_subjects(id) ON DELETE CASCADE,
+  completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE topic_tracker ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_plan ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all for anon" ON topic_tracker FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON weekly_plan FOR ALL USING (true) WITH CHECK (true);
+
+-- FOCUS AREAS (Skill Planner)
+CREATE TABLE IF NOT EXISTS focus_areas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  color TEXT DEFAULT '#3b82f6',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS focus_subtopics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  focus_area_id UUID REFERENCES focus_areas(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  status TEXT DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS focus_weekly_plan (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  focus_area_id UUID REFERENCES focus_areas(id) ON DELETE CASCADE,
+  subtopic_id UUID REFERENCES focus_subtopics(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  week_start DATE NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE focus_areas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE focus_subtopics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE focus_weekly_plan ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all for anon" ON focus_areas FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON focus_subtopics FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON focus_weekly_plan FOR ALL USING (true) WITH CHECK (true);
