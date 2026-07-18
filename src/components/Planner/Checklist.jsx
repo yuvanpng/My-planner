@@ -77,7 +77,7 @@ export default function Checklist({ date }) {
             </div>
 
             <div className="checklist-tabs">
-                {['all', 'personal', 'academic'].map(t => (
+                {['all', 'personal'].map(t => (
                     <button
                         key={t}
                         className={`checklist-tab ${tab === t ? 'active' : ''}`}
@@ -90,38 +90,33 @@ export default function Checklist({ date }) {
 
             <div>
                 {todos.map(todo => {
-                    const dl = formatDeadline(todo.deadline);
-                    const persistent = isPersistent(todo);
-                    return (
-                        <div
-                            key={todo.id}
-                            className="checklist-item"
-                            draggable
-                            onDragStart={e => handleDragStart(e, todo)}
-                            style={{ cursor: 'grab' }}
-                        >
-                            <GripVertical size={12} style={{ color: 'var(--text-tertiary)', opacity: 0.4, flexShrink: 0 }} />
-                            <button
-                                className={`checkbox ${todo.completed ? 'checked' : ''}`}
-                                onClick={() => handleToggle(todo.id)}
-                            >
-                                {todo.completed && <Check />}
-                            </button>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <span className={`checklist-text ${todo.completed ? 'completed' : ''}`}>
-                                    {todo.title}
-                                </span>
-                                {todo.isWeeklyPlan && (
-                                    <span style={{ fontSize: '0.6rem', color: 'var(--accent-primary)', marginLeft: '6px', background: 'var(--accent-primary-dim)', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
-                                        weekly plan
-                                    </span>
-                                )}
-                                {persistent && (
-                                    <span style={{ fontSize: '0.6rem', color: 'var(--accent-warning)', marginLeft: '6px' }}>
-                                        carried over
-                                    </span>
-                                )}
-                            </div>
+                     const dl = formatDeadline(todo.deadline);
+                     const persistent = isPersistent(todo);
+                     return (
+                         <div
+                             key={todo.id}
+                             className="checklist-item"
+                             draggable
+                             onDragStart={e => handleDragStart(e, todo)}
+                             style={{ cursor: 'grab' }}
+                         >
+                             <GripVertical size={12} style={{ color: 'var(--text-tertiary)', opacity: 0.4, flexShrink: 0 }} />
+                             <button
+                                 className={`checkbox ${todo.completed ? 'checked' : ''}`}
+                                 onClick={() => handleToggle(todo.id)}
+                             >
+                                 {todo.completed && <Check />}
+                             </button>
+                             <div style={{ flex: 1, minWidth: 0 }}>
+                                 <span className={`checklist-text ${todo.completed ? 'completed' : ''}`}>
+                                     {todo.title}
+                                 </span>
+                                 {persistent && (
+                                     <span style={{ fontSize: '0.6rem', color: 'var(--accent-warning)', marginLeft: '6px' }}>
+                                         carried over
+                                     </span>
+                                 )}
+                             </div>
                             {dl && (
                                 <span className={`checklist-deadline ${dl.className}`}>{dl.text}</span>
                             )}

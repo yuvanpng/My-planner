@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Timer, Lightbulb } from 'lucide-react';
+import { Calendar, BarChart3, BookOpen, Target, CalendarDays, Timer, Lightbulb, Gift } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { Toaster } from 'react-hot-toast';
 
@@ -50,10 +50,6 @@ export default function Layout() {
                     <BookOpen size={20} />
                     <span>Journal</span>
                 </NavLink>
-                <NavLink to="/academic" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
-                    <GraduationCap size={20} />
-                    <span>Academic</span>
-                </NavLink>
                 <NavLink to="/goals" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
                     <Target size={20} />
                     <span>Goals</span>
@@ -65,6 +61,10 @@ export default function Layout() {
                 <NavLink to="/ideas" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
                     <Lightbulb size={20} />
                     <span>Ideas</span>
+                </NavLink>
+                <NavLink to="/rewards" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
+                    <Gift size={20} />
+                    <span>Rewards</span>
                 </NavLink>
             </nav>
 

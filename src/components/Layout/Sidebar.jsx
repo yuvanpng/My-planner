@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, BookOpen, GraduationCap, Target, CalendarDays, Sun, Moon, Timer, Lightbulb, Layers } from 'lucide-react';
+import { Calendar, BarChart3, BookOpen, Target, CalendarDays, Sun, Moon, Timer, Lightbulb, Layers, Gift } from 'lucide-react';
 import { getActiveGoals } from '../../lib/store';
+import { getCurrentBalance, ensureTodayTokens } from '../../lib/rewardStore';
 import { useState, useEffect } from 'react';
 
 function getTheme() {
@@ -22,14 +23,17 @@ export default function Sidebar() {
     const [weeklyGoals, setWeeklyGoals] = useState([]);
     const [monthlyGoals, setMonthlyGoals] = useState([]);
     const [isDark, setIsDark] = useState(getTheme() === 'dark');
+    const [tokenBalance, setTokenBalance] = useState(0);
 
     useEffect(() => {
         const load = () => {
             setWeeklyGoals(getActiveGoals('weekly'));
             setMonthlyGoals(getActiveGoals('monthly'));
+            ensureTodayTokens();
+            setTokenBalance(getCurrentBalance());
         };
         load();
-        const interval = setInterval(load, 5000);
+        const interval = setInterval(load, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -71,17 +75,7 @@ export default function Sidebar() {
                     Study Timer
                 </NavLink>
 
-                <div className="sidebar-section-label">Academic</div>
-                <NavLink to="/academic" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                    <GraduationCap />
-                    Academic
-                </NavLink>
-
                 <div className="sidebar-section-label">Planning</div>
-                <NavLink to="/planner" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                    <CalendarDays />
-                    Weekly Planner
-                </NavLink>
                 <NavLink to="/goals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <Target />
                     Goals & Events
@@ -91,6 +85,22 @@ export default function Sidebar() {
                 <NavLink to="/skills" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <Layers />
                     Skill Planner
+                </NavLink>
+
+                <div className="sidebar-section-label">Rewards</div>
+                <NavLink to="/rewards" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center' }}>
+                    <Gift />
+                    <span style={{ flex: 1 }}>Rewards Store</span>
+                    {tokenBalance > 0 && (
+                        <span style={{
+                            fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                            background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.12))',
+                            border: '1px solid rgba(245,158,11,0.3)',
+                            color: '#f59e0b', whiteSpace: 'nowrap',
+                        }}>
+                            🪙 {tokenBalance}
+                        </span>
+                    )}
                 </NavLink>
 
                 <div className="sidebar-section-label">Creative</div>

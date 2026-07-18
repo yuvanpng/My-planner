@@ -161,38 +161,11 @@ export function getTodosForDate(date, category = null) {
         return false;
     });
     if (category) filtered = filtered.filter(t => t.category === category);
-
-    // Inject items from weekly plan for this date
-    const weeklyPlanItems = getWeeklyPlanForDate(date);
-    const convertedWeeklyItems = weeklyPlanItems.map(item => ({
-        id: `weekly-${item.id}`,
-        title: item.activity,
-        completed: item.completed,
-        category: 'academic',
-        date: date,
-        isWeeklyPlan: true,
-        weeklyId: item.id
-    }));
-
-    if (!category || category === 'academic') {
-        filtered = [...filtered, ...convertedWeeklyItems];
-    }
-
     return filtered;
 }
 
 export function getAllTodos() {
     return getStore(STORAGE_KEYS.TODOS);
-}
-
-export function getAcademicTodosWithDeadlines() {
-    const all = getStore(STORAGE_KEYS.TODOS);
-    return all.filter(t => t.category === 'academic' && !t.completed).sort((a, b) => {
-        if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
-        if (a.deadline) return -1;
-        if (b.deadline) return 1;
-        return 0;
-    });
 }
 
 export function getUpcomingDeadlines(daysAhead = 3) {
@@ -239,9 +212,6 @@ export function toggleTodo(id) {
         all[idx].updated_at = new Date().toISOString();
         setStore(STORAGE_KEYS.TODOS, all);
         pushUpdate('todo_items', id, { completed: all[idx].completed, updated_at: all[idx].updated_at });
-    } else if (id.startsWith('weekly-')) {
-        const weeklyId = id.replace('weekly-', '');
-        toggleWeeklyPlanComplete(weeklyId);
     }
 }
 
@@ -444,42 +414,6 @@ export function upsertJournal(date, content, mood) {
     }
     setStore(STORAGE_KEYS.JOURNAL, all);
     pushUpsert('journal_entries', record, ['date']);
-}
-
-// ==================== ACADEMIC PROJECTS ====================
-export function getProjects() {
-    return getStore(STORAGE_KEYS.PROJECTS);
-}
-
-export function addProject(project) {
-    const all = getStore(STORAGE_KEYS.PROJECTS);
-    const newProject = {
-        id: generateId(), description: '', status: 'active',
-        next_meeting: null, meeting_notes: '',
-        progress: 0, semester: '',
-        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-        ...project,
-    };
-    all.push(newProject);
-    setStore(STORAGE_KEYS.PROJECTS, all);
-    pushInsert('academic_projects', newProject);
-    return newProject;
-}
-
-export function updateProject(id, updates) {
-    const all = getStore(STORAGE_KEYS.PROJECTS);
-    const idx = all.findIndex(p => p.id === id);
-    if (idx >= 0) {
-        all[idx] = { ...all[idx], ...updates, updated_at: new Date().toISOString() };
-        setStore(STORAGE_KEYS.PROJECTS, all);
-        pushUpdate('academic_projects', id, { ...updates, updated_at: all[idx].updated_at });
-    }
-}
-
-export function deleteProject(id) {
-    const all = getStore(STORAGE_KEYS.PROJECTS);
-    setStore(STORAGE_KEYS.PROJECTS, all.filter(p => p.id !== id));
-    pushDelete('academic_projects', id);
 }
 
 // ==================== WEEKLY/MONTHLY GOALS ====================
@@ -735,50 +669,6 @@ export function deleteLifetimeGoal(id) {
     all = all.filter(g => g.id !== id);
     setStore(STORAGE_KEYS.LIFETIME_GOALS, all);
     pushDelete('lifetime_goals', id);
-}
-
-// ==================== WEEKLY PLAN ====================
-export function getWeeklyPlanForWeek(weekStartDate) {
-    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
-    return all.filter(e => e.week_start === weekStartDate);
-}
-
-export function getWeeklyPlanForDate(date) {
-    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
-    return all.filter(e => e.date === date);
-}
-
-export function upsertWeeklyPlanEntry(entry) {
-    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
-    const idx = all.findIndex(e => e.id === entry.id);
-    let record;
-    if (idx >= 0) {
-        all[idx] = { ...all[idx], ...entry, updated_at: new Date().toISOString() };
-        record = all[idx];
-    } else {
-        record = { id: generateId(), completed: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...entry };
-        all.push(record);
-    }
-    setStore(STORAGE_KEYS.WEEKLY_PLAN, all);
-    pushUpsert('weekly_plan', record, ['id']);
-    return record;
-}
-
-export function toggleWeeklyPlanComplete(id) {
-    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
-    const idx = all.findIndex(e => e.id === id);
-    if (idx >= 0) {
-        all[idx].completed = !all[idx].completed;
-        all[idx].updated_at = new Date().toISOString();
-        setStore(STORAGE_KEYS.WEEKLY_PLAN, all);
-        pushUpdate('weekly_plan', id, { completed: all[idx].completed, updated_at: all[idx].updated_at });
-    }
-}
-
-export function deleteWeeklyPlanEntry(id) {
-    const all = getStore(STORAGE_KEYS.WEEKLY_PLAN);
-    setStore(STORAGE_KEYS.WEEKLY_PLAN, all.filter(e => e.id !== id));
-    pushDelete('weekly_plan', id);
 }
 
 // ==================== TOPIC TRACKER ====================

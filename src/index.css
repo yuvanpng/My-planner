@@ -100,7 +100,23 @@
 }
 
 [data-theme="dark"] .react-calendar-heatmap .color-empty {
-  fill: #1c1c1c;
+  fill: #161b22;
+}
+
+[data-theme="dark"] .react-calendar-heatmap .color-scale-1 {
+  fill: #0e4429;
+}
+
+[data-theme="dark"] .react-calendar-heatmap .color-scale-2 {
+  fill: #196127;
+}
+
+[data-theme="dark"] .react-calendar-heatmap .color-scale-3 {
+  fill: #239a3b;
+}
+
+[data-theme="dark"] .react-calendar-heatmap .color-scale-4 {
+  fill: #39d353;
 }
 
 [data-theme="dark"] .checkbox {
@@ -952,23 +968,23 @@ body {
 }
 
 .react-calendar-heatmap .color-empty {
-  fill: #f0f0f0;
+  fill: #ebedf0;
 }
 
 .react-calendar-heatmap .color-scale-1 {
-  fill: rgba(220, 76, 62, 0.2);
+  fill: #9be9a8;
 }
 
 .react-calendar-heatmap .color-scale-2 {
-  fill: rgba(220, 76, 62, 0.4);
+  fill: #40c463;
 }
 
 .react-calendar-heatmap .color-scale-3 {
-  fill: rgba(220, 76, 62, 0.6);
+  fill: #30a14e;
 }
 
 .react-calendar-heatmap .color-scale-4 {
-  fill: rgba(220, 76, 62, 0.85);
+  fill: #216e39;
 }
 
 /* ======================== JOURNAL ======================== */
@@ -3675,3 +3691,87 @@ body {
     position: static;
   }
 }
+
+/* ======================== REWARDS STORE ======================== */
+
+.reward-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.reward-card-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255,255,255,0.03) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Token coin spin animation on redemption */
+@keyframes coinSpin {
+  0%   { transform: rotateY(0deg) scale(1); }
+  50%  { transform: rotateY(180deg) scale(1.2); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+
+.coin-animate {
+  animation: coinSpin 0.5s ease-in-out;
+  display: inline-block;
+}
+
+/* Redeem success pulse */
+@keyframes redeemPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(124, 92, 252, 0.4); }
+  70%  { box-shadow: 0 0 0 14px rgba(124, 92, 252, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 92, 252, 0); }
+}
+
+/* Range slider thumb override for settings */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-elevated);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 2px var(--accent-primary);
+  transition: box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 4px var(--accent-primary-dim);
+}
+
+/* Reward token balance animation in sidebar */
+@keyframes tokenGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50%       { box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.25); }
+}
+
+/* Responsive reward grid */
+@media (max-width: 640px) {
+  .reward-card {
+    padding: 14px;
+  }
+}
+
