@@ -8,6 +8,7 @@ import {
     getHabits, getHabitLogsForDate, getGoalLogsForDate, getDailyGoals,
     getScheduleForDate, getScheduleDoneForDate, getStudySessionsForDate, calculateStreak,
 } from './store';
+import { pushUpsert, pushDelete, pushFullTable } from './sync';
 
 // ── Storage Keys ───────────────────────────────────────────────────────────────
 const KEYS = {
@@ -60,11 +61,19 @@ const DEFAULT_REWARDS = [
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 export function getTokenConfig() {
-    return { ...DEFAULT_CONFIG, ...(get(KEYS.CONFIG) || {}) };
+    const raw = get(KEYS.CONFIG);
+    let stored = {};
+    if (Array.isArray(raw)) {
+        stored = raw[0]?.config || {};
+    } else if (raw) {
+        stored = raw; // migration from old format
+    }
+    return { ...DEFAULT_CONFIG, ...stored };
 }
 
 export function saveTokenConfig(config) {
-    set(KEYS.CONFIG, config);
+    set(KEYS.CONFIG, [{ id: 'default', config }]);
+    pushUpsert('reward_config', { id: 'default', config });
 }
 
 // ── Rewards ────────────────────────────────────────────────────────────────────
@@ -72,6 +81,7 @@ export function getRewards() {
     const stored = get(KEYS.REWARDS);
     if (!stored) {
         set(KEYS.REWARDS, DEFAULT_REWARDS);
+        pushFullTable('rewards');
         return DEFAULT_REWARDS;
     }
     return stored.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
@@ -90,6 +100,7 @@ export function addReward(reward) {
     };
     all.push(newReward);
     set(KEYS.REWARDS, all);
+    pushUpsert('rewards', newReward);
     return newReward;
 }
 
@@ -99,6 +110,7 @@ export function updateReward(id, updates) {
     if (idx >= 0) {
         all[idx] = { ...all[idx], ...updates, updatedAt: new Date().toISOString() };
         set(KEYS.REWARDS, all);
+        pushUpsert('rewards', all[idx]);
         return all[idx];
     }
     return null;
@@ -107,6 +119,7 @@ export function updateReward(id, updates) {
 export function deleteReward(id) {
     const all = getRewards().filter(r => r.id !== id);
     set(KEYS.REWARDS, all);
+    pushDelete('rewards', id);
 }
 
 export function reorderRewards(orderedIds) {
@@ -116,6 +129,7 @@ export function reorderRewards(orderedIds) {
         if (r) r.sortOrder = idx;
     });
     set(KEYS.REWARDS, all);
+    pushFullTable('rewards');
 }
 
 // ── Redemptions ────────────────────────────────────────────────────────────────
@@ -135,6 +149,7 @@ export function addRedemption(rewardId, rewardName, tokensSpent) {
     };
     all.push(entry);
     set(KEYS.REDEMPTIONS, all);
+    pushUpsert('redemptions', entry);
     return entry;
 }
 
@@ -144,6 +159,7 @@ export function markRedemptionUsed(id) {
     if (idx >= 0) {
         all[idx].usedAt = new Date().toISOString();
         set(KEYS.REDEMPTIONS, all);
+        pushUpsert('redemptions', all[idx]);
     }
 }
 
@@ -254,6 +270,7 @@ export function saveDailyTokenEntry(dateStr) {
     if (existing >= 0) ledger[existing] = entry;
     else ledger.push(entry);
     set(KEYS.DAILY_TOKENS, ledger);
+    pushUpsert('daily_tokens', entry, ['date']);
     return entry;
 }
 

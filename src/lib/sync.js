@@ -29,6 +29,10 @@ const TABLE_MAP = {
     focus_areas: 'planner_focus_areas',
     focus_subtopics: 'planner_focus_subtopics',
     focus_weekly_plan: 'planner_focus_weekly_plan',
+    reward_config: 'planner_reward_config',
+    rewards: 'planner_rewards',
+    redemptions: 'planner_redemptions',
+    daily_tokens: 'planner_daily_tokens',
 };
 
 // ==================== PULL: Supabase → localStorage ====================
