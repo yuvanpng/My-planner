@@ -33,6 +33,7 @@ const TABLE_MAP = {
     rewards: 'planner_rewards',
     redemptions: 'planner_redemptions',
     daily_tokens: 'planner_daily_tokens',
+    notes: 'planner_notes',
 };
 
 // ==================== PULL: Supabase → localStorage ====================

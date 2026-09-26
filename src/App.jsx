@@ -10,6 +10,7 @@ import StudyTimer from './pages/StudyTimer';
 import IdeaVault from './pages/IdeaVault';
 import SkillPlanner from './pages/SkillPlanner';
 import RewardsStore from './pages/RewardsStore';
+import Notes from './pages/Notes';
 
 export default function App() {
   return (
@@ -26,6 +27,8 @@ export default function App() {
             <Route path="/skills" element={<SkillPlanner />} />
             <Route path="/ideas" element={<IdeaVault />} />
             <Route path="/rewards" element={<RewardsStore />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/notes/:id" element={<Notes />} />
           </Route>
         </Routes>
       </BrowserRouter>

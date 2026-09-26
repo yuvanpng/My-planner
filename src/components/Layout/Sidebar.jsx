@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, BookOpen, Target, CalendarDays, Sun, Moon, Timer, Lightbulb, Layers, Gift } from 'lucide-react';
+import { Calendar, BarChart3, BookOpen, Target, CalendarDays, Sun, Moon, Timer, Lightbulb, Layers, Gift, FileText } from 'lucide-react';
 import { getActiveGoals } from '../../lib/store';
 import { getCurrentBalance, ensureTodayTokens } from '../../lib/rewardStore';
 import { useState, useEffect } from 'react';
@@ -107,6 +107,12 @@ export default function Sidebar() {
                 <NavLink to="/ideas" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <Lightbulb />
                     Idea Vault
+                </NavLink>
+
+                <div className="sidebar-section-label">Workspace</div>
+                <NavLink to="/notes" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <FileText />
+                    Notes
                 </NavLink>
             </nav>
 
